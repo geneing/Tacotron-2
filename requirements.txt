@@ -7,7 +7,6 @@ numpy
 scipy
 tqdm
 Unidecode
-pyaudio
 sounddevice
 lws
 keras
