@@ -3,7 +3,7 @@ import wave
 from datetime import datetime
 
 import numpy as np
-import pyaudio
+#import pyaudio
 import sounddevice as sd
 import tensorflow as tf
 from datasets import audio
