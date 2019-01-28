@@ -6,7 +6,7 @@ rm -rf /workspace/WaveRNN-Pytorch/*
 
 git clone https://github.com/geneing/Tacotron-2.git
 cd /workspace/Tacotron-2
-
+pip install -r requirements.txt
 python3 train.py --input_dir=/workspace/TrainingData/M-AILABS/training_data/mary_ann --model='Tacotron' --eval_interval=5000 --embedding_interval=5000 --tacotron_input=/workspace/TrainingData/M-AILABS/training_data/mary_ann/train.txt --hparams='tacotron_batch_size=16'  | tee log.log
 
 

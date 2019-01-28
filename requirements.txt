@@ -11,4 +11,3 @@ pyaudio
 sounddevice
 lws
 keras
-pyaudio
