@@ -35,7 +35,7 @@ hparams = tf.contrib.training.HParams(
 	#Synthesis also uses the following hardware parameters for multi-GPU parallel synthesis.
 	tacotron_num_gpus = 1, #Determines the number of gpus in use for Tacotron training.
 	wavenet_num_gpus = 1, #Determines the number of gpus in use for WaveNet training.
-	split_on_cpu = False, #Determines whether to split data on CPU or on first GPU. This is automatically True when more than 1 GPU is used.
+	split_on_cpu = True, #Determines whether to split data on CPU or on first GPU. This is automatically True when more than 1 GPU is used.
 		#(Recommend: False on slow CPUs/Disks, True otherwise for small speed boost)
 	###########################################################################################################################################
 
@@ -110,7 +110,7 @@ hparams = tf.contrib.training.HParams(
 
 	#Contribution by @begeekmyfriend
 	#Spectrogram Pre-Emphasis (Lfilter: Reduce spectrogram noise and helps model certitude levels. Also allows for better G&L phase reconstruction)
-	preemphasize = True, #whether to apply filter
+	preemphasize = False, #whether to apply filter
 	preemphasis = 0.97, #filter coefficient.
 
 	#Limits
