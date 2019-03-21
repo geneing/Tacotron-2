@@ -208,6 +208,9 @@ def train(log_dir, args, hparams):
 				log('Starting new training!', slack=True)
 				saver.save(sess, checkpoint_path, global_step=global_step)
 
+			tf.train.write_graph(sess.graph.as_graph_def(), '.', os.path.join(save_dir,'tacotron_model.pbtxt'), as_text=True)
+			tf.train.write_graph(sess.graph.as_graph_def(), '.', os.path.join(save_dir,'tacotron_model.pb'), as_text=False)
+
 			#initializing feeder
 			feeder.start_threads(sess)
 
