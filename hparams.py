@@ -89,11 +89,11 @@ hparams = tf.contrib.training.HParams(
 	win_size = 800, #For 22050Hz, 1100 ~= 50 ms (If None, win_size = n_fft) (0.05 * sample_rate)
 	sample_rate = 16000, #22050 Hz (corresponding to ljspeech dataset) (sox --i <filename>)
 	frame_shift_ms = None, #Can replace hop_size parameter. (Recommended: 12.5)
-	magnitude_power = 2., #The power of the spectrogram magnitude (1. for energy, 2. for power)
+	magnitude_power = 1., #The power of the spectrogram magnitude (1. for energy, 2. for power)
 
 
 	#M-AILABS (and other datasets) trim params (there parameters are usually correct for any data, but definitely must be tuned for specific speakers)
-	trim_silence = True, #Whether to clip silence in Audio (at beginning and end of audio only, not the middle)
+	trim_silence = False, #Whether to clip silence in Audio (at beginning and end of audio only, not the middle)
 	trim_fft_size = 2048, #Trimming window size
 	trim_hop_size = 512, #Trimmin hop length
 	trim_top_db = 45, #Trimming db difference from reference db (smaller==harder trim.)
@@ -140,7 +140,7 @@ hparams = tf.contrib.training.HParams(
 	encoder_lstm_units = 256, #number of lstm units for each direction (forward and backward)
 
 	#Attention mechanism
-	smoothing = False, #Whether to smooth the attention normalization function
+	smoothing = True, #Whether to smooth the attention normalization function
 	attention_dim = 128, #dimension of attention space
 	attention_filters = 32, #number of attention convolution filters
 	attention_kernel = (31, ), #kernel size of attention convolution
@@ -149,8 +149,8 @@ hparams = tf.contrib.training.HParams(
 	#Attention synthesis constraints
 	#"Monotonic" constraint forces the model to only look at the forwards attention_win_size steps.
 	#"Window" allows the model to look at attention_win_size neighbors, both forward and backward steps.
-	synthesis_constraint = False,  #Whether to use attention windows constraints in synthesis only (Useful for long utterances synthesis)
-	synthesis_constraint_type = 'window', #can be in ('window', 'monotonic'). 
+	synthesis_constraint = True,  #Whether to use attention windows constraints in synthesis only (Useful for long utterances synthesis)
+	synthesis_constraint_type = 'monotonic', #can be in ('window', 'monotonic').
 	attention_win_size = 7, #Side of the window. Current step does not count. If mode is window and attention_win_size is not pair, the 1 extra is provided to backward part of the window.
 
 	#Decoder
