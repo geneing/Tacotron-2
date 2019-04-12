@@ -447,12 +447,13 @@ def MaskedSigmoidCrossEntropy(targets, outputs, targets_lengths, hparams, mask=N
 	with tf.control_dependencies([tf.assert_equal(tf.shape(targets), tf.shape(mask))]):
 		#Use a weighted sigmoid cross entropy to measure the <stop_token> loss. Set hparams.cross_entropy_pos_weight to 1
 		#will have the same effect as  vanilla tf.nn.sigmoid_cross_entropy_with_logits.
-		losses = tf.nn.weighted_cross_entropy_with_logits(targets=targets, logits=outputs, pos_weight=hparams.cross_entropy_pos_weight)
+		outputs_sh=outputs+1.e-10
+		losses = tf.nn.weighted_cross_entropy_with_logits(targets=targets, logits=outputs_sh, pos_weight=hparams.cross_entropy_pos_weight)
 
 	with tf.control_dependencies([tf.assert_equal(tf.shape(mask), tf.shape(losses))]):
 		masked_loss = losses * mask
 
-	return tf.reduce_sum(masked_loss) / tf.count_nonzero(masked_loss, dtype=tf.float32)
+	return tf.reduce_sum(masked_loss) / (tf.count_nonzero(masked_loss, dtype=tf.float32)+1.e-7)
 
 def MaskedLinearLoss(targets, outputs, targets_lengths, hparams, mask=None):
 	'''Computes a masked MAE loss with priority to low frequencies
@@ -479,7 +480,7 @@ def MaskedLinearLoss(targets, outputs, targets_lengths, hparams, mask=None):
 		masked_l1 = l1 * mask_
 		masked_l1_low = masked_l1[:,:,0:n_priority_freq]
 
-	mean_l1 = tf.reduce_sum(masked_l1) / tf.reduce_sum(mask_)
-	mean_l1_low = tf.reduce_sum(masked_l1_low) / tf.reduce_sum(mask_)
+	mean_l1 = tf.reduce_sum(masked_l1) / (tf.reduce_sum(mask_)+1.e-7)
+	mean_l1_low = tf.reduce_sum(masked_l1_low) / (tf.reduce_sum(mask_)+1.e-7)
 
 	return 0.5 * mean_l1 + 0.5 * mean_l1_low

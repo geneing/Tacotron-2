@@ -10,6 +10,13 @@ from tacotron.models.attention import LocationSensitiveAttention
 
 import numpy as np
 
+
+def check_nan( t, name='noname'):
+	# check = tf.debugging.check_numerics( t, "Nan tensor: %s"%name, name="Nancheck_%s"%name )
+	# with tf.control_dependencies([check]):
+	# 	pass
+	return
+
 def split_func(x, split_pos):
 	rst = []
 	start = 0
@@ -82,7 +89,8 @@ class Tacotron():
 					tower_stop_token_targets.append(tf.reshape(p_stop_token_targets[i], [batch_size, -1]))
 				if p_linear_targets is not None:
 					tower_linear_targets.append(tf.reshape(p_linear_targets[i], [batch_size, -1, linear_channels]))
-
+		
+		self.tower_inputs = tower_inputs
 		self.tower_decoder_output = []
 		self.tower_alignments = []
 		self.tower_stop_token_prediction = []
@@ -296,7 +304,7 @@ class Tacotron():
 						if hp.predict_linear:
 							#Compute Linear L1 mask loss (priority to low frequencies)
 							linear_loss = MaskedLinearLoss(self.tower_linear_targets[i], self.tower_linear_outputs[i],
-								self.targets_lengths, hparams=self._hparams)
+								self.tower_targets_lengths[i], hparams=self._hparams)
 						else:
 							linear_loss=0.
 					else:
@@ -356,6 +364,12 @@ class Tacotron():
 		self.regularization_loss = total_regularization_loss / hp.tacotron_num_gpus
 		self.linear_loss = total_linear_loss / hp.tacotron_num_gpus
 		self.loss = total_loss / hp.tacotron_num_gpus
+		check_nan(self.before_loss,'before')
+		check_nan(self.after_loss,'after')
+		check_nan(self.stop_token_loss,'stop_token_loss')
+		check_nan(self.regularization_loss, 'regularization')
+		check_nan(self.loss, 'total_loss')
+
 
 	def add_optimizer(self, global_step):
 		'''Adds optimizer. Sets "gradients" and "optimize" fields. add_loss must have been called.
@@ -399,6 +413,7 @@ class Tacotron():
 				# each_grads_vars = ((grad0_gpu0, var0_gpu0), ... , (grad0_gpuN, var0_gpuN))
 				grads = []
 				for g,_ in grad_and_vars:
+					g=tf.check_numerics(g, "Nan\t\t\t\tName: {}, Op: {} \n\n\n".format(g.name, g.op))
 					expanded_g = tf.expand_dims(g, 0)
 					# Append on a 'tower' dimension which we will average over below.
 					grads.append(expanded_g)
@@ -441,9 +456,9 @@ class Tacotron():
 		hp = self._hparams
 
 		#Compute natural exponential decay
-		lr = tf.train.exponential_decay(init_lr, 
+		lr = tf.train.exponential_decay(init_lr,
 			global_step - hp.tacotron_start_decay, #lr = 1e-3 at step 50k
-			self.decay_steps, 
+			self.decay_steps,
 			self.decay_rate, #lr = 1e-5 around step 310k
 			name='lr_exponential_decay')
 

@@ -8,12 +8,14 @@ from datetime import datetime
 import infolog
 import numpy as np
 import tensorflow as tf
+
+from tensorflow.python import debug as tf_debug
 from datasets import audio
 from hparams import hparams_debug_string
 from tacotron.feeder import Feeder
 from tacotron.models import create_model
 from tacotron.utils import ValueWindow, plot
-from tacotron.utils.text import sequence_to_text
+from tacotron.utils.text import sequence_to_text, text_to_sequence
 from tacotron.utils.symbols import symbols
 from tqdm import tqdm
 
@@ -187,6 +189,8 @@ def train(log_dir, args, hparams):
 			summary_writer = tf.summary.FileWriter(tensorboard_dir, sess.graph)
 
 			sess.run(tf.global_variables_initializer())
+			# sess = tf_debug.LocalCLIDebugWrapperSession(sess)
+			# sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
 
 			#saved model restoring
 			if args.restore:
@@ -217,15 +221,31 @@ def train(log_dir, args, hparams):
 			#Training loop
 			while not coord.should_stop() and step < args.tacotron_train_steps:
 				start_time = time.time()
-				step, loss, opt = sess.run([global_step, model.loss, model.optimize])
+				
+				try:
+					step, inputs, loss, opt, before_loss, after_loss, stop_token_loss, regularization_loss = sess.run([global_step, model.tower_inputs, model.loss, model.optimize, model.before_loss, model.after_loss, model.stop_token_loss, model.regularization_loss])
+				except Exception as e:
+					log("Exception: {}".format(str(e)))
+					for inp in inputs:
+						try:
+							for ip in inp:
+								log('\t\t\tInput: {}'.format(sequence_to_text(ip)), end='\n')
+						except: pass
+						
+				
+				
 				time_window.append(time.time() - start_time)
 				loss_window.append(loss)
 				message = 'Step {:7d} [{:.3f} sec/step, loss={:.5f}, avg_loss={:.5f}]'.format(
 					step, time_window.average, loss, loss_window.average)
 				log(message, end='\r', slack=(step % args.checkpoint_interval == 0))
+				#log("Loss {:.5f} before {:.5f} after {:.5f} stop {:.5f} regular {:.5f} ".format(loss, before_loss, after_loss, stop_token_loss, regularization_loss), end='\r')
 
 				if np.isnan(loss) or loss > 100.:
-					log('Loss exploded to {:.5f} at step {}'.format(loss, step))
+					#log('Loss exploded to {:.5f} at step {}'.format(loss, step))
+					log("Loss exploded {:.5f} before {:.5f} after {:.5f} stop {:.5f} regular {:.5f} ".format(loss, before_loss, after_loss, stop_token_loss, regularization_loss), end='\n')
+					log("Loss exploded {:.5f} before {:.5f} after {:.5f} stop {:.5f} regular {:.5f} ".format(loss, before_loss, after_loss, stop_token_loss, regularization_loss), end='\r')
+					saver.save(sess, checkpoint_path, global_step=999999)
 					raise Exception('Loss exploded')
 
 				if step % args.summary_interval == 0:

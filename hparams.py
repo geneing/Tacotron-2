@@ -89,11 +89,11 @@ hparams = tf.contrib.training.HParams(
 	win_size = 800, #For 22050Hz, 1100 ~= 50 ms (If None, win_size = n_fft) (0.05 * sample_rate)
 	sample_rate = 16000, #22050 Hz (corresponding to ljspeech dataset) (sox --i <filename>)
 	frame_shift_ms = None, #Can replace hop_size parameter. (Recommended: 12.5)
-	magnitude_power = 1., #The power of the spectrogram magnitude (1. for energy, 2. for power)
+	magnitude_power = 2., #The power of the spectrogram magnitude (1. for energy, 2. for power)
 
 
 	#M-AILABS (and other datasets) trim params (there parameters are usually correct for any data, but definitely must be tuned for specific speakers)
-	trim_silence = False, #Whether to clip silence in Audio (at beginning and end of audio only, not the middle)
+	trim_silence = True, #Whether to clip silence in Audio (at beginning and end of audio only, not the middle)
 	trim_fft_size = 2048, #Trimming window size
 	trim_hop_size = 512, #Trimmin hop length
 	trim_top_db = 45, #Trimming db difference from reference db (smaller==harder trim.)
@@ -140,7 +140,7 @@ hparams = tf.contrib.training.HParams(
 	encoder_lstm_units = 256, #number of lstm units for each direction (forward and backward)
 
 	#Attention mechanism
-	smoothing = True, #Whether to smooth the attention normalization function
+	smoothing = False, #Whether to smooth the attention normalization function
 	attention_dim = 128, #dimension of attention space
 	attention_filters = 32, #number of attention convolution filters
 	attention_kernel = (31, ), #kernel size of attention convolution
@@ -225,14 +225,14 @@ hparams = tf.contrib.training.HParams(
 	upsample_type = 'SubPixel', #Type of the upsampling deconvolution. Can be ('1D' or '2D', 'Resize', 'SubPixel').
 	upsample_activation = 'Relu', #Activation function used during upsampling. Can be ('LeakyRelu', 'Relu' or None)
 	upsample_scales = [4, 5, 10], #prod(upsample_scales) should be equal to hop_size
-	freq_axis_kernel_size = 5, #Only used for 2D upsampling types. This is the number of requency bands that are spanned at a time for each frame.
+	freq_axis_kernel_size = 3, #Only used for 2D upsampling types. This is the number of requency bands that are spanned at a time for each frame.
 	leaky_alpha = 0.4, #slope of the negative portion of LeakyRelu (LeakyRelu: y=x if x>0 else y=alpha * x)
 	NN_init = True, #Determines whether we want to initialize upsampling kernels/biases in a way to ensure upsample is initialize to Nearest neighbor upsampling. (Mostly for debug)
 	NN_scaler = 0.1, #Determines the initial Nearest Neighbor upsample values scale. i.e: upscaled_input_values = input_values * NN_scaler (1. to disable)
 
 	#global conditioning
 	gin_channels = -1, #Set this to -1 to disable global conditioning, Only used for multi speaker dataset. It defines the depth of the embeddings (Recommended: 16)
-	use_speaker_embedding = True, #whether to make a speaker embedding
+	use_speaker_embedding = False, #whether to make a speaker embedding
 	n_speakers = 5, #number of speakers (rows of the embedding)
 	speakers_path = None, #Defines path to speakers metadata. Can be either in "speaker\tglobal_id" (with header) tsv format, or a single column tsv with speaker names. If None, use "speakers".
 	speakers = ['speaker0', 'speaker1', #List of speakers used for embeddings visualization. (Consult "wavenet_vocoder/train.py" if you want to modify the speaker names source).
@@ -260,7 +260,7 @@ hparams = tf.contrib.training.HParams(
 	tacotron_start_decay = 40000, #Step at which learning decay starts
 	tacotron_decay_steps = 24500, #Determines the learning rate decay slope (UNDER TEST)
 	tacotron_decay_rate = 0.5, #learning rate decay rate (UNDER TEST)
-	tacotron_initial_learning_rate = 1e-3, #starting learning rate
+	tacotron_initial_learning_rate = 1.e-3, #starting learning rate
 	tacotron_final_learning_rate = 1e-5, #minimal learning rate
 
 	#Optimization parameters
@@ -270,13 +270,13 @@ hparams = tf.contrib.training.HParams(
 
 	#Regularization parameters
 	tacotron_reg_weight = 1e-7, #regularization weight (for L2 regularization)
-	tacotron_scale_regularization = False, #Whether to rescale regularization weight to adapt for outputs range (used when reg_weight is high and biasing the model)
+	tacotron_scale_regularization = True, #Whether to rescale regularization weight to adapt for outputs range (used when reg_weight is high and biasing the model)
 	tacotron_zoneout_rate = 0.1, #zoneout rate for all LSTM cells in the network
 	tacotron_dropout_rate = 0.5, #dropout rate for all convolutional layers + prenet
 	tacotron_clip_gradients = True, #whether to clip gradients
 
 	#Evaluation parameters
-	tacotron_natural_eval = False, #Whether to use 100% natural eval (to evaluate Curriculum Learning performance) or with same teacher-forcing ratio as in training (just for overfit)
+	tacotron_natural_eval = True, #Whether to use 100% natural eval (to evaluate Curriculum Learning performance) or with same teacher-forcing ratio as in training (just for overfit)
 
 	#Decoder RNN learning can take be done in one of two ways:
 	#	Teacher Forcing: vanilla teacher forcing (usually with ratio = 1). mode='constant'
@@ -285,7 +285,7 @@ hparams = tf.contrib.training.HParams(
 	#Bengio et al. 2015: Scheduled Sampling for Sequence Prediction with Recurrent Neural Networks.
 	#Can be found under: https://arxiv.org/pdf/1506.03099.pdf
 	tacotron_teacher_forcing_mode = 'constant', #Can be ('constant' or 'scheduled'). 'scheduled' mode applies a cosine teacher forcing ratio decay. (Preference: scheduled)
-	tacotron_teacher_forcing_ratio = 1., #Value from [0., 1.], 0.=0%, 1.=100%, determines the % of times we force next decoder inputs, Only relevant if mode='constant'
+	tacotron_teacher_forcing_ratio = .8, #Value from [0., 1.], 0.=0%, 1.=100%, determines the % of times we force next decoder inputs, Only relevant if mode='constant'
 	tacotron_teacher_forcing_init_ratio = 1., #initial teacher forcing ratio. Relevant if mode='scheduled'
 	tacotron_teacher_forcing_final_ratio = 0., #final teacher forcing ratio. (Set None to use alpha instead) Relevant if mode='scheduled'
 	tacotron_teacher_forcing_start_decay = 10000, #starting point of teacher forcing ratio decay. Relevant if mode='scheduled'

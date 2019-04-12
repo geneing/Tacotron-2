@@ -3,8 +3,8 @@ import os
 import re
 import time
 from time import sleep
-import matplotlib
-matplotlib.use('Qt5Agg')
+import matplotlib.pyplot as plt
+plt.switch_backend('TkAgg')
 
 import tensorflow as tf
 from hparams import hparams, hparams_debug_string
@@ -16,13 +16,14 @@ import numpy as np
 from datasets import audio
 import librosa 
 
-checkpoint_path = "checkpoints/tacotron_model.ckpt-80000"
+checkpoint_path = "logs-Tacotron/taco_pretrained/tacotron_model.ckpt-200000"
 synth = Synthesizer()
+
 synth.load(checkpoint_path, hparams)
 
-save_dir='.'
-tf.train.write_graph(synth.session.graph.as_graph_def(), '.', os.path.join(save_dir,'tacotron_model.pbtxt'), as_text=True)
-tf.train.write_graph(synth.session.graph.as_graph_def(), '.', os.path.join(save_dir,'tacotron_model.pb'), as_text=False)
+# save_dir='.'
+# tf.train.write_graph(synth.session.graph.as_graph_def(), '.', os.path.join(save_dir,'tacotron_model.pbtxt'), as_text=True)
+# tf.train.write_graph(synth.session.graph.as_graph_def(), '.', os.path.join(save_dir,'tacotron_model.pb'), as_text=False)
 
 
 
@@ -87,13 +88,18 @@ sys.path.insert(0,'../WaveRNN-Pytorch/library/build-src-Desktop-RelWithDebInfo')
 import WaveRNNVocoder
 
 vocoder=WaveRNNVocoder.Vocoder()
-vocoder.setDebugLevel(0)
 
 vocoder.loadWeights('../WaveRNN-Pytorch/model_outputs/model.bin')
+
+mm=mels[0].squeeze()
+
+mm[mm<-4]=-4
+mm[mm>4]=4
 wav = vocoder.melToWav(mels[0].squeeze().T)
 
 #wav=audio.inv_mel_spectrogram(mels[0].squeeze().T, hparams)
 librosa.output.write_wav('test.wav', wav, 16000)
+plt.plot(wav)
 print()
 
 #%%
